@@ -34,12 +34,13 @@ int main() {
             perror("Senden fehlgeschlagen!");
             return 1;
         }
-
+	printf("BLABABALBALVB\n");
         /* Daten empfangen */
         if (read(sock, response, 1024, 0) < 0) {
             perror("Lesen fehlgeschlagen!");
             return 1;
         }
+	printf("BLABABALBALVB2\n");
         printf("Reply: %s\n", response);
     }
     close(sock);

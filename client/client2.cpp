@@ -3,6 +3,10 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 
+#include <iostream>
+
+using namespace std;
+
 int main() {
     int sock;
     struct sockaddr_in server;
@@ -25,24 +29,12 @@ int main() {
         return 1;
     } printf("Verbindung hergestellt!\n");
 
-    char username[255];
-    printf("Username: "); scanf("%s", username);
-
-    /* Sende Username */
-    if (write(sock, username, strlen(username), 0) < 0) {
-        perror("Senden fehlgeschlagen!");
-        return 1;
-    }
-
     while(1) {
         printf("> ");
         scanf("%s", message);
-        printf("SCANF_ERGBENIS_BITTE: %s\n", message);
-
-        message[strlen(message)] = 'H';
 
         /* Sende Daten */
-        if (write(sock, message, strlen(message)+1, 0) < 0) {
+        if (write(sock, message, strlen(message), 0) < 0) {
             perror("Senden fehlgeschlagen!");
             return 1;
         }

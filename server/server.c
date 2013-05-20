@@ -49,7 +49,9 @@ int main() {
                     buf[received] = '\0';
                     printf("--> %s", buf);
                     write(1, buf, received);
-		}
+                    send(sock2, buf, received, 0);
+                }
+                printf("KADJFLKDASFJ\n");
             }
             printf("Ende der Kommunikation\n");
             close(sock2);
