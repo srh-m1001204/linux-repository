@@ -6,17 +6,20 @@
 #include <stdlib.h>
 #include <arpa/inet.h>
 #include <string.h>
+#include <errno.h>
 #include <iostream>
+
+using namespace std;
 
 #define PORT 1234
 #define BUF_SIZE 1024
-
-using namespace std;
 
 int main() {
     int sock1, sock2, received, child_pid;
     struct sockaddr_in server;
     char buf[BUF_SIZE];
+    char username[255];
+    int username_length;
 
     server.sin_family       = AF_INET;      // Protokollfamilie
     server.sin_addr.s_addr  = htonl(INADDR_ANY);   // Interface
@@ -46,7 +49,16 @@ int main() {
             perror("Fehler bei accept()");
             continue;
         } else {
-            /* Kommunikation mit dem Client */
+            if (username_length = read(sock2, username, 255)) {
+                if (username_length < 0)
+                    perror("Fehler beim Lesen");
+                else {
+                    username[username_length] = '\0';
+                    write(1, username, username_length);
+                    write(1, " hat sich angemeldet.\n", 32);
+                    //send(sock2, "yes", 3, 0);
+                }
+            }
         }
 
         if((child_pid = fork()) == 0) {
@@ -55,10 +67,12 @@ int main() {
                 if (received < 0)
                     perror("Fehler beim Lesen");
                 else {
-                    buf[received] = '\0';
-                    printf("--> %s", buf);
+                    write(1, username, username_length);
+                    write(1, " sagt: ", 7);
                     write(1, buf, received);
-                    send(sock2, buf, received, 0);
+                    write(1, "\n", 1);
+                    buf[received] = '\0';
+                    //send(sock2, total_buf, total_received+1, 0);
                 }
             }
             printf("Ende der Kommunikation\n");
@@ -67,7 +81,7 @@ int main() {
             // Elternprozess
         } else {
             perror("Fork fehlgeschlagen!");
-            close(sock1); close (sock2);
+            close(sock1); close(sock2);
         }
     }
     close(sock1);
