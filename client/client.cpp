@@ -38,23 +38,28 @@ int main() {
         return 1;
     }
 
+    int child_pid = fork();
+
     while(1) {
-        cout << username << "> ";
-        cin.getline(message, 1024);
-
-        /* Sende Daten */
-        if (write(sock, message, strlen(message)+1) < 0) {
-            perror("Senden fehlgeschlagen!");
-            return 1;
+        if (child_pid == 0) {
+            cout << username << "> ";
+            cin.getline(message, 1024);
+            /* Sende Daten */
+            if (write(sock, message, strlen(message)+1) < 0) {
+                perror("Senden fehlgeschlagen!");
+                exit(1);
+            }
+        } else if (child_pid > 0) {
+            /* Daten empfangen */
+            if (read(sock, response, 1024) < 0) {
+                perror("Lesen fehlgeschlagen!");
+                exit(1);
+            }
+            printf("Reply: %s\n", response);
+        } else {
+            perror("forking failed...");
+            break;
         }
-        /* Daten empfangen */
-
-        /*
-        if (read(sock, response, 1024) < 0) {
-            perror("Lesen fehlgeschlagen!");
-            return 1;
-        }
-        printf("Reply: %s\n", response); */
     }
     close(sock);
     return 0;

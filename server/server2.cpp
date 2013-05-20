@@ -8,6 +8,7 @@
 #include <string.h>
 #include <errno.h>
 #include <iostream>
+#include <vector>
 
 using namespace std;
 
@@ -15,7 +16,7 @@ using namespace std;
 #define BUF_SIZE 1024
 
 int main() {
-    int sock1, sock2, received, child_pid;
+    int sock1, sock2, sock3, received, child_pid;
     struct sockaddr_in server;
     char buf[BUF_SIZE];
     char username[255];
@@ -38,50 +39,47 @@ int main() {
     }
     /* Socket in den listen-Zustand versetzen */
     listen(sock1, 5);
+    //sock3 = accept(sock1, 0, 0);
+
     printf("Socket-Server bereit\n");
 
     while(1) {
         printf("Erwarte eingehende Verbindung\n");
         /* Verbindung akzeptieren */
         sock2 = accept(sock1, 0, 0);    // BLOCKIERT!
-
-        if (sock2 < 0) {
-            perror("Fehler bei accept()");
-            continue;
-        } else {
-            if (username_length = read(sock2, username, 255)) {
-                if (username_length < 0)
-                    perror("Fehler beim Lesen");
-                else {
-                    username[username_length] = '\0';
-                    write(1, username, username_length);
-                    write(1, " hat sich angemeldet.\n", 32);
-                    //send(sock2, "yes", 3, 0);
+        if((child_pid = fork()) == 0) {
+            if (sock2 < 0) {
+                perror("Fehler bei accept()");
+                continue;
+            } else {
+                if (username_length = read(sock2, username, 255)) {
+                    if (username_length < 0)
+                        perror("Fehler beim Lesen");
+                    else {
+                        username[username_length] = '\0';
+                        write(1, username, username_length);
+                        write(1, " hat sich angemeldet.\n", 32);
+                        //send(sock2, "yes", 3, 0);
+                    }
                 }
             }
-        }
-
-        if((child_pid = fork()) == 0) {
             while (received = read(sock2, buf, BUF_SIZE)) {
                 // Kindprozess
-                if (received < 0)
-                    perror("Fehler beim Lesen");
-                else {
-                    write(1, username, username_length);
-                    write(1, " sagt: ", 7);
-                    write(1, buf, received);
-                    write(1, "\n", 1);
-                    buf[received] = '\0';
-                    //send(sock2, total_buf, total_received+1, 0);
-                }
+                write(1, username, username_length);
+                write(1, " sagt: ", 7);
+                write(1, buf, received);
+                write(1, "\n", 1);
+                buf[received] = '\0';
+                send(sock2, buf,received+1, 0);
             }
             printf("Ende der Kommunikation\n");
             close(sock2);
         } else if(child_pid > 0) {
             // Elternprozess
+            cout << "Hi, ich bin der Vater\n";
         } else {
             perror("Fork fehlgeschlagen!");
-            close(sock1); close(sock2);
+            close(sock2);
         }
     }
     close(sock1);
