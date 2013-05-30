@@ -47,6 +47,7 @@ int main() {
         printf("Erwarte eingehende Verbindung\n");
         /* Verbindung akzeptieren */
         sock2 = accept(sock1, 0, 0);    // BLOCKIERT!
+        cout << "sock: " << sock2 << endl;
         if((child_pid = fork()) == 0) {
             if (sock2 < 0) {
                 perror("Fehler bei accept()");

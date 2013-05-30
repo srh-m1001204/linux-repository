@@ -47,13 +47,13 @@ int main() {
             /* Sende Daten */
             if (write(sock, message, strlen(message)+1) < 0) {
                 perror("Senden fehlgeschlagen!");
-                exit(1);
+                return 1;
             }
         } else if (child_pid > 0) {
             /* Daten empfangen */
             if (read(sock, response, 1024) < 0) {
                 perror("Lesen fehlgeschlagen!");
-                exit(1);
+                return 1;
             }
             printf("Reply: %s\n", response);
         } else {
