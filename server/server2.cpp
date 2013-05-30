@@ -22,6 +22,14 @@ int main() {
     char username[255];
     int username_length;
 
+    int fd[2];
+    int nbytes;
+    char client_mngr_buf[BUF_SIZE];
+
+    pipe(fd);
+
+    vector<int> client_sock;
+
     server.sin_family       = AF_INET;      // Protokollfamilie
     server.sin_addr.s_addr  = htonl(INADDR_ANY);   // Interface
     server.sin_port         = htons(PORT);  // Port
@@ -39,14 +47,31 @@ int main() {
     }
     /* Socket in den listen-Zustand versetzen */
     listen(sock1, 5);
-    //sock3 = accept(sock1, 0, 0);
 
     printf("Socket-Server bereit\n");
+    int client_mngr_pid = fork();
+
+    if (client_mngr_pid == 0) {
+        close(fd[1]);
+        cout << "Client Manager wartet auf Anweisung...\n";
+        while(1) {
+            if ((nbytes = read(fd[0], client_mngr_buf, BUF_SIZE)) > 0) {
+                write(1, "bekomme: ", 16);
+                write(1, client_mngr_buf, nbytes);
+                write(1, "\n", 1);
+            }
+        }
+    } else if (client_mngr_pid < 0) {
+        perror("Client Manager konnte nicht erstellt werden!");
+        exit(1);
+    }
+    close(fd[0]);
 
     while(1) {
         printf("Erwarte eingehende Verbindung\n");
         /* Verbindung akzeptieren */
         sock2 = accept(sock1, 0, 0);    // BLOCKIERT!
+        client_sock.push_back(sock2);
         cout << "sock: " << sock2 << endl;
         if((child_pid = fork()) == 0) {
             if (sock2 < 0) {
@@ -71,13 +96,17 @@ int main() {
                 write(1, buf, received);
                 write(1, "\n", 1);
                 buf[received] = '\0';
-                send(sock2, buf,received+1, 0);
+                write(fd[1], "Befehl wurde gesendet...", 32);
             }
             printf("Ende der Kommunikation\n");
             close(sock2);
         } else if(child_pid > 0) {
             // Elternprozess
             cout << "Hi, ich bin der Vater\n";
+            for (int i=0; i<client_sock.size(); i++) {
+                cout << "sock " << i << ": " << client_sock[i] << endl;
+                write(client_sock[i], "fick dich, du Socke", 32);
+            }
         } else {
             perror("Fork fehlgeschlagen!");
             close(sock2);
